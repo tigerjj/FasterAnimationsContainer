@@ -38,7 +38,7 @@ public class FasterAnimationsContainer{
     private SoftReference<ImageView> mSoftReferenceImageView; // Used to prevent holding ImageView when it should be dead.
     private Handler mHandler; // Handler to communication with UIThread
     
-    private Bitmap mRecycleBitmap;
+    private Bitmap mRecycleBitmap;  //Bitmap can recycle by inBitmap is SDK Version >=11
 
     // Listeners
     private OnAnimationStoppedListener mOnAnimationStoppedListener;
