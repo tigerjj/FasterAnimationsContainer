@@ -1,8 +1,13 @@
 package com.tigerlee.libs;
 
 
+import android.annotation.SuppressLint;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.widget.ImageView;
 
@@ -32,6 +37,8 @@ public class FasterAnimationsContainer{
     private boolean mIsRunning; // true if the animation prevents starting the animation twice
     private SoftReference<ImageView> mSoftReferenceImageView; // Used to prevent holding ImageView when it should be dead.
     private Handler mHandler; // Handler to communication with UIThread
+    
+    private Bitmap mRecycleBitmap;  //Bitmap can recycle by inBitmap is SDK Version >=11
 
     // Listeners
     private OnAnimationStoppedListener mOnAnimationStoppedListener;
@@ -47,6 +54,7 @@ public class FasterAnimationsContainer{
     public static FasterAnimationsContainer getInstance(ImageView imageView) {
         if (sInstance == null)
             sInstance = new FasterAnimationsContainer(imageView);
+        sInstance.mRecycleBitmap = null;
         return sInstance;
     }
 
@@ -213,9 +221,20 @@ public class FasterAnimationsContainer{
             mImageView = imageView;
         }
 
+        @SuppressLint("NewApi") 
         @Override
         protected Drawable doInBackground(Integer... params) {
-            return mImageView.getContext().getResources().getDrawable(params[0]);
+        	if(Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB){
+        		return mImageView.getContext().getResources().getDrawable(params[0]);
+        	}
+        	BitmapFactory.Options options = new BitmapFactory.Options();
+			options.inMutable = true;
+			if (mRecycleBitmap != null)
+				options.inBitmap = mRecycleBitmap;
+			mRecycleBitmap = BitmapFactory.decodeResource(mImageView
+					.getContext().getResources(), params[0], options);
+			BitmapDrawable drawable = new BitmapDrawable(mImageView.getContext().getResources(),mRecycleBitmap);
+            return drawable;
         }
 
         @Override
